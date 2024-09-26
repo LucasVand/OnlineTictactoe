@@ -1,0 +1,48 @@
+.queueCont {
+    margin-top: 10em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+
+}
+
+.queueTitle {
+    font-size: 1.5em;
+    font-weight: 600;
+}
+
+.queueLoadingFront {
+    background-color: rgba(90, 90, 90, 0.35);
+    border-radius: 10em;
+    height: 2em;
+    width: 2em;
+    filter: blur(0.5px);
+    animation: loading 0.7s infinite reverse both;
+    margin: 2.5em;
+
+}
+
+.queueContTop {
+    display: flex;
+    justify-content: top;
+    align-items: left;
+}
+
+
+.wholeScreenQueue {
+    width: 100vw;
+    height: 100vh;
+}
+
+
+
+@keyframes loading {
+    to {
+        scale: 0;
+    }
+
+    from {
+        scale: 2;
+    }
+}

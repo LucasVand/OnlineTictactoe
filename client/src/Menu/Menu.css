@@ -1,0 +1,122 @@
+.menuCont {
+    display: grid;
+    grid-template-columns: 1fr 0.3fr;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: 100vw;
+
+
+
+
+}
+
+
+
+.menuDescCont {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+
+.menuIntroCont {
+    display: flex;
+
+    align-items: left;
+    flex-direction: column;
+}
+
+.menuGreeting {
+    font-size: 3em;
+    font-weight: 700;
+    font-style: italic;
+    animation: introAni 0.3s linear 0.1s both;
+
+}
+
+.menuTitle {
+    font-size: 5em;
+    line-height: 0.9em;
+    font-weight: 800;
+    color: rgb(237, 181, 75);
+
+    animation: introAni 0.3s linear both;
+
+}
+
+.menuDesc {
+    text-wrap: wrap;
+    margin: 1em;
+    animation: introAni 0.3s linear 0.15s both;
+
+
+}
+
+.matchmakeButton {
+
+    border-radius: 3em;
+    padding: 0.5em 1.5em;
+    text-align: center;
+    font-size: 1.4em;
+    font-weight: 700;
+    border-style: none;
+    background-image: linear-gradient(55deg, rgb(233, 168, 80), rgb(230, 82, 65));
+    box-shadow: -3px 3px 15px 5px rgba(233, 169, 80, 0.136), 3px -3px 15px 5px rgba(235, 109, 95, 0.116);
+
+    transition: scale 0.3s, box-shadow 0.3s;
+
+    animation: introAni 0.3s linear 0.19s both;
+
+}
+
+.matchmakeButton:hover {
+    scale: 1.02;
+    box-shadow: -3px 3px 25px 10px rgba(233, 169, 80, 0.136), 3px -3px 25px 10px rgba(235, 109, 95, 0.116);
+}
+
+.matchmakeButton:active {
+    scale: 0.95;
+}
+
+.menuStatsCont {}
+
+.playersOnlineCounter {
+    animation: introAni 0.3s linear 0.18s both;
+}
+
+.statsCont {
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+    justify-content: center;
+
+    border-radius: 0.7em;
+    padding: 1em;
+    margin: 1em;
+    animation: introAni 0.3s linear 0.2s both;
+}
+
+.statsTitle {
+    font-size: 2em;
+    font-weight: 600;
+    text-wrap: wrap;
+}
+
+@keyframes introAni {
+    0% {
+        position: relative;
+        right: 5%;
+        opacity: 0;
+    }
+
+
+
+    100% {
+
+        position: relative;
+        right: 0;
+        opacity: 1;
+    }
+}
