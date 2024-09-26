@@ -3,7 +3,7 @@ import O from '../assets/OLogo.png'
 import X from '../assets/XLogo.png'
 import Redo from '../assets/Redo.png'
 import { useEffect, useState } from 'react'
-import { json, useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 import { Player, Room } from '../SharedTypes'
 import { socket } from '../App'

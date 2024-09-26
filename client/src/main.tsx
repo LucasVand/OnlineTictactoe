@@ -4,9 +4,7 @@ import App from './App.tsx'
 import './index.css'
 
 import {
-  BrowserRouter,
-  createBrowserRouter,
-  RouterProvider,
+  BrowserRouter
 } from "react-router-dom";
 
 

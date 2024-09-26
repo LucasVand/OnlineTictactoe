@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/sharedtypes.ts","./src/main.tsx","./src/vite-env.d.ts","./src/game/game.tsx","./src/login/login.tsx","./src/menu/menu.tsx","./src/queue/queue.tsx"],"version":"5.6.2"}

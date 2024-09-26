@@ -7,7 +7,8 @@ import { io } from 'socket.io-client'
 import Game from './Game/Game'
 import Queue from './Queue/Queue'
 
-export const socket = io('http://LucasVand-40774.portmap.host:40774')
+export const socket = io('http://LucasVand-40774.portmap.host:40774/')
+//http://LucasVand-40774.portmap.host:40774/
 
 function App() {
   return (
