@@ -32,7 +32,7 @@ function Game() {
     useEffect(() => {
         console.clear()
         socket.emit("player_data_request", playerData.name)
-        socket.emit('opponent_data_request', playerData.name)
+        socket.emit('opponent_data_request', playerData.roomId)
         socket.emit('room_data_request', playerData.roomId)
 
 
@@ -67,13 +67,6 @@ function Game() {
             console.log(playerData)
         })
 
-        socket.on('opponent_data', (data) => {
-            setOpponentData(data)
-
-            console.log(data)
-
-        })
-
         socket.on('room_data', (data: Room) => {
             setroomData(data)
             const myIndex = data.players[0].name == playerData.name ? 0 : 1
@@ -82,11 +75,13 @@ function Game() {
             setMySymbol(symbol)
             setMyTurn(symbol == data.turn ? true : false)
 
+            setOpponentData(data.players[myIndex == 1 ? 0 : 1])
+
             if (data.countDown < 1) {
                 setStarted(true)
                 oldTime = Date.now()
             }
-            console.log(roomData)
+
 
         })
         socket.on('count_down', (data: number) => {
@@ -111,6 +106,8 @@ function Game() {
         socket.on('opponent_left', () => {
             setOpponentLeft(true)
         })
+
+
 
     }, [socket, playerData, opponentData, countDown, roomData, mySymbol, myTurn, myIndex, won, oppTimeLeft, myTimeLeft])
 
@@ -164,7 +161,7 @@ function Game() {
                     <div className={`${!started ? 'gameStartTimer' : ''}`}>{!started ? countDown : ''}</div>
                 </div>
                 <div className={`${won != ' ' ? 'gameWonCont' : 'die'}`}>
-                    <div className={`${won != ' ' ? 'wonText' : ''}`}>{won == mySymbol ? 'You Won!' : 'You Lost'}</div>
+                    <div className={`${won != ' ' ? 'wonText' : ''}`}>{won == mySymbol ? 'You Won!' : won == 'n' ? 'Tie' : "You lost"} </div>
                     <div className='opponentLeftText'>{opponentLeft ? "Other Player Left Please Return To Menu" : ''} </div>
                     <button className={`${won != ' ' ? 'leaveButton' : ''}`} onClick={leaveGame} >
                         <img src={X} className='playAgainImg' style={{ width: '1.2em' }}></img>

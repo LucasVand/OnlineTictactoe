@@ -13,11 +13,10 @@ function Queue() {
     const [roomData, setroomData] = useState<Room>(new Room(''))
     const [myIndex, setMyIndex] = useState(0)
 
+    const [queueStat, setQueueStat] = useState('waiting')
+
     useEffect(() => {
         socket.emit("player_data_request", playerData.name)
-        if (playerData.roomId != '') {
-            socket.emit('room_data_request', playerData.roomId)
-        }
     }, [])
 
 
@@ -26,14 +25,17 @@ function Queue() {
             navigator('/game', { state: { playerData: playerData } })
         })
 
-        socket.on("player_data", (data) => {
+        socket.on("player_data", (data: Player) => {
             setPlayerData(data)
             setDataGot(true)
-            if (playerData.roomId != '') {
-                socket.emit('is_room_full', playerData)
-                console.log('checked if room ' + playerData.roomId + " is full")
+            console.log(data.roomId)
+            if (data.roomId != '') {
+                socket.emit('room_data_request', data.roomId)
+                socket.emit('is_room_full', data)
+                console.log('checked if room ' + data.roomId + " is full")
             }
-            console.log(playerData)
+
+            console.log(data)
         })
 
         socket.on('room_data', (data: Room) => {
@@ -41,10 +43,33 @@ function Queue() {
             const myIndex = data.players[0].name == playerData.name ? 0 : 1
             setMyIndex(myIndex)
             console.log(roomData)
+
+            if (data.players.length == 0) {
+                navigator('/menu', { replace: true, state: { user: playerData.name } })
+            }
         })
 
 
-    }, [socket, playerData, dataGot])
+
+        socket.on('opponent_left', () => {
+            setQueueStat("leaving")
+            setTimeout(() => {
+                navigator('/menu', { replace: true, state: { user: playerData.name } })
+            }, 1000)
+        })
+
+
+        socket.on('leave_queue_response', (res: string) => {
+            if (res == 'good') {
+                socket.emit('leave_game', playerData)
+                navigator('/menu', { replace: true, state: { user: playerData.name } })
+            } else {
+                setQueueStat("failed")
+            }
+        })
+
+
+    }, [socket, playerData, dataGot, queueStat])
 
     const opponentName = () => {
         const oppIndex = myIndex == 0 ? 1 : 0
@@ -53,6 +78,20 @@ function Queue() {
         } else {
             return '-'
         }
+    }
+
+    const queueMessage = () => {
+        if (queueStat == 'waiting') {
+            return 'Waiting For Opponent...'
+        } else if (queueStat == 'leaving') {
+            return "Opponet Left, Leaving Queue"
+        } else if (queueStat == 'failed') {
+            return "Unable To Leave Room"
+        }
+        return ''
+    }
+    const leaveQueue = () => {
+        socket.emit('leave_queue_request', playerData)
     }
 
 
@@ -71,8 +110,10 @@ function Queue() {
                     </div>
                 </div>
                 <div className='queueCont'>
-                    <div className='queueTitle'>Waiting For Opponent...</div>
+                    <div className='queueTitle'>{queueMessage()}</div>
                     <div className='queueLoadingFront'> </div>
+                    <div style={{ height: '1em' }}></div>
+                    <button className='submitNameButton' onClick={leaveQueue}>Leave Queue</button>
                 </div>
             </div>
         </>

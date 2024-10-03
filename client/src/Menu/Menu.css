@@ -5,10 +5,13 @@
     align-items: center;
     justify-content: center;
     width: 100vw;
+}
 
-
-
-
+@media only screen and (max-width: 900px) {
+    .menuCont {
+        display: flex;
+        flex-direction: column;
+    }
 }
 
 
@@ -50,7 +53,7 @@
     text-wrap: wrap;
     margin: 1em;
     animation: introAni 0.3s linear 0.15s both;
-
+    max-width: 90wv;
 
 }
 
@@ -69,6 +72,8 @@
 
     animation: introAni 0.3s linear 0.19s both;
 
+    color: white;
+
 }
 
 .matchmakeButton:hover {
@@ -80,7 +85,10 @@
     scale: 0.95;
 }
 
-.menuStatsCont {}
+.menuStatsCont {
+    margin: 2em;
+}
+
 
 .playersOnlineCounter {
     animation: introAni 0.3s linear 0.18s both;

@@ -29,8 +29,11 @@ function Menu() {
         })
 
         socket.on('room_found', () => {
+            console.log("sent to queue with this rooom id " + playerData.roomId)
             navigator('/queue', { state: { playerData: playerData } })
         })
+
+
 
     }, [socket, playersOnline, playerData])
     useEffect(() => {
@@ -39,7 +42,7 @@ function Menu() {
 
     const getWinRate = () => {
         const winRate = Number.isNaN(playerData.wins / playerData.gamesPlayed) ? 0 : playerData.wins / playerData.gamesPlayed
-        return winRate.toFixed(2) + '%'
+        return (winRate * 100).toFixed(0) + '%'
     }
 
     const matchmake = () => {
@@ -53,7 +56,7 @@ function Menu() {
                     <div className='menuIntroCont'>
                         <div className='menuTitle'>Online <br /> Tictactoe</div>
                         <div className='menuGreeting'>Whats Up {playerData.name}!!</div>
-                        <div className='menuDesc'>This is an online tictactoe that was made with react, tpyescript, css, and socket.io.<br /> Press the matchmake button to find a match</div>
+                        <div className='menuDesc'>This is an online tictactoe that was made with react, tpyescript, css, and socket.io. Press the matchmake button to find a match</div>
                         <button className='matchmakeButton' onClick={matchmake}>Find Game</button>
                     </div>
                 </div>

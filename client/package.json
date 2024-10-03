@@ -1,5 +1,5 @@
 {
-  "homepage": "http://lucasvanderwielen.ca/",
+  "homepage": "./",
   "name": "client",
   "private": true,
   "version": "0.0.0",
@@ -10,7 +10,10 @@
     "deploy": "gh-pages -d dist",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "transpile": "npm run build && rm -rf ./OnlineTTT && mv ./dist/ ./OnlineTTT/ ",
+    "upload": "scp -r ./OnlineTTT admin@172.30.236.150:C:/Users/vande/Frontends/",
+    "post": "npm run transpile && npm run upload"
   },
   "dependencies": {
     "ghpages": "^0.0.10",
