@@ -4,14 +4,20 @@ import { createServer } from "http"
 import { Server, Socket } from "socket.io"
 
 import cors from 'cors'
+import readline from 'readline/promises'
 
-import { Player, Room } from '../client/src/SharedTypes'
+import { Player, Room } from './SharedTypes'
+import { findIfIDIsInDataBase, findIfNameIsInDataBase, findPlayerIndexInRoom, findRoomIndexFromPlayer } from "./Helper"
+
+import { readData, writeData } from "./FileIO"
 
 
-const app = express()
+
+const app: any = express()
 
 app.use(cors)
 const server = createServer(app)
+const PORT = 5005
 
 const io = new Server(server, {
     cors: {
@@ -21,48 +27,124 @@ const io = new Server(server, {
 
     }
 })
-
 //Server Variables
-var playersOnline = 0
+export var playersOnline = 0
 
-var players: Player[] = []
+export var players: Player[] = []
+players = readData()
+players.forEach((value) => {
+    value.roomId = ''
+})
 
-var rooms: Room[] = []
+
+export var rooms: Room[] = []
 
 var nextRoomId = 10
 
+export var errorsArr: String[] = []
+
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
+
+function createInputPromise() {
+    const userInputPromise = rl.question("")
+
+    userInputPromise.then((answer: string) => {
+
+        if (answer == 'c') {
+            console.clear()
+        }
+        if (answer == 'p') {
+            console.table(players)
+        }
+        if (answer == 'r') {
+            console.table(rooms, ['id', 'players', 'available', 'turn', 'gameStarted', 'ready'])
+
+        }
+        if (answer == 'clear') {
+            players = []
+            writeData(players)
+            console.log("Player Data Cleared")
+        }
 
 
 
+        createInputPromise()
+
+    })
+}
+
+createInputPromise()
+//setInterval(consoleDashBoard, 1000)
+function consoleDashBoard() {
+
+    console.clear()
+    console.log(" Server is Active on port: " + PORT)
+    console.log("-----------------------------")
+    console.log("Users Connected: " + playersOnline)
+    console.log("Room Count: " + rooms.length)
+    console.log("-----------------------------")
+    rooms.forEach((room) => {
+        console.log("   Room Id: " + room.id)
+        console.log("   Room Avaliable: " + room.available)
+        console.log("   Players Connected: " + room.players.length)
+        console.log("   Room Started: " + room.gameStarted)
+        console.log("   Room Is Full: " + room.isRoomFull())
+        console.log("   Players Ready: " + room.ready)
+        console.log("   -----------------------------")
+    })
+    console.log("-----------------------------")
+    console.log("Next Room Index: " + nextRoomId)
+    console.log("Players in register: " + players.length)
+    console.log("-----------------------------")
+    console.table(players)
+    console.log("-----------------------------")
+    console.log("Error count: " + errorsArr.length)
+
+    // errorsArr.forEach(value => console.log("Error 1: " + value))
+}
 
 io.on("connection", (socket) => {
+
+    //called when player attempts to login from the login screen
     socket.on('player_registered', (name: string) => {
 
+        //if the player is not in the data base then we add them to it
         if (findIfNameIsInDataBase(name) == -1) {
             registerPlayer(name, socket)
         }
+        //this is the index of the player just logged-in/registered
         const index = findIfNameIsInDataBase(name)
 
-        players[index].roomId = ''
+
         if (players[index].online) {
+            //this send the client that the player they tried to login is already logged in
             io.to(socket.id).emit("successful_login", { condition: 'alreadyOnline', name: name })
         } else {
-            login(index, socket)
-
+            players[index].login(socket)
+            playersOnline++
+            //send the client that they successfully logged in and to redirect to menu page
             io.to(socket.id).emit("successful_login", { condition: 'success', name: name })
         }
 
-
     })
+    //every file requests this when it is rendered so it acts as a way to see when a player has reconnected
     socket.on('player_data_request', (data: string) => {
         const index = findIfNameIsInDataBase(data)
         if (index != -1) {
             if (!players[index].online) {
-                login(index, socket)
+                players[index].login(socket)
+                playersOnline++
+                writeData(players)
             }
         } else {
-            console.log("unable to find " + data + " in database")
+            errorsArr.push("unable to find " + data + " in database")
+
         }
+        // errorsArr.push(players[index].sendable().roomId)
+
         io.to(socket.id).emit("player_data", players[index])
 
         io.emit('player_connected', playersOnline)
@@ -71,89 +153,66 @@ io.on("connection", (socket) => {
 
     socket.on('matchmake', (playerName) => {
         var roomAvailableIndex: number = rooms.findIndex(room => room.available == true)
-        const currentPlayer: Player | undefined = players.find(value => value.id == socket.id)
-        if (roomAvailableIndex != -1 && rooms[roomAvailableIndex].players.length < 2) {
 
-            socket.join(rooms[roomAvailableIndex].id)
-            if (currentPlayer != undefined) {
-                rooms[roomAvailableIndex].players.push(currentPlayer)
-            }
-        }
-        else {
-
+        if (roomAvailableIndex == -1) {
             const newRoom: Room = new Room(nextRoomId.toString())
             roomAvailableIndex = rooms.length
             nextRoomId++
-            if (currentPlayer != undefined) {
-                newRoom.players.push(currentPlayer)
-            }
-
             rooms.push(newRoom)
-            socket.join(newRoom.id)
-
-            console.log(currentPlayer?.name + ' joined new room' + newRoom.id)
         }
+        const currentPlayerIndex: number = findIfNameIsInDataBase(playerName)
 
-
-        if (currentPlayer == undefined) {
-            console.log("unable to find player")
-        } else {
-            console.log("tried to access " + roomAvailableIndex)
-            currentPlayer.roomId = rooms[roomAvailableIndex].id
-        }
+        rooms[roomAvailableIndex].addPlayer(players[currentPlayerIndex])
+        // console.log(currentPlayer.name + "'s Room id was set to " + rooms[roomAvailableIndex].id)
+        players[currentPlayerIndex].setRoomId(rooms[roomAvailableIndex].id)
+        socket.join(rooms[roomAvailableIndex].id)
 
         io.to(socket.id).emit('room_found', rooms[roomAvailableIndex].id)
     })
 
     socket.on('is_room_full', (player: Player) => {
-        const roomIndex = rooms.findIndex(value => value.id == player.roomId)
+
+        const roomIndex = findRoomIndexFromPlayer(player)
+
         if (roomIndex != -1) {
-            console.log(rooms[roomIndex])
-            const playerIndex = rooms[roomIndex].players.findIndex(value => value.name == player.name)
+            const playerIndex = findPlayerIndexInRoom(rooms[roomIndex], player.name)
 
-            if (playerIndex != undefined) {
+            if (playerIndex != -1) {
 
-                rooms[roomIndex].ready[playerIndex] = true
-                if (rooms[roomIndex].ready[0] == true && rooms[roomIndex].ready[1] == true) {
 
-                    rooms[roomIndex].available = false
+                rooms[roomIndex].setPlayerReady(players[findIfNameIsInDataBase(player.name)])
+
+
+                if (rooms[roomIndex].isRoomFull()) {
+
+                    rooms[roomIndex].closeRoom()
 
                     io.in(rooms[roomIndex].id).emit('start_game')
+                } else {
 
                 }
             } else {
-                console.log("the player that checked to see if full does not exist")
+                errorsArr.push("the player that checked to see if full does not exist")
             }
         } else {
-            console.log('unable to find room when seeing if it is full')
+            errorsArr.push('unable to find room when seeing if it is full, player: ' + player.name)
         }
     })
 
-
-    socket.on('opponent_data_request', (playerName) => {
-        const currentPlayer: Player = players[findIfNameIsInDataBase(playerName)]
-        const room = rooms.find(value => value.id == currentPlayer.roomId)
-        if (room != undefined && currentPlayer != undefined) {
-            var opponent = room.players[0].name == playerName ? players[1] : players[0]
-            io.to(socket.id).emit('opponent_data', opponent)
-        } else {
-            console.log("unable to find the room or other player in the opponent data request")
-        }
-    })
 
     socket.on('room_data_request', (roomId) => {
-        const currentRoom = rooms.find(value => value.id == roomId)
+        const roomIndex = rooms.findIndex(value => value.id == roomId)
 
-        if (currentRoom != undefined) {
-            const roomIndex = rooms.findIndex(value => currentRoom.id == value.id)
-            io.to(socket.id).emit('room_data', currentRoom)
-            if (!rooms[roomIndex].gameStarted && rooms[roomIndex].ready[0] == true && rooms[roomIndex].ready[1] == true) {
-                console.log("weird thing happened dont know why its here")
-                startRoom(currentRoom.id)
+        if (roomIndex != -1) {
+
+            io.to(socket.id).emit('room_data', rooms[roomIndex])
+            if (!rooms[roomIndex].gameStarted && rooms[roomIndex].isRoomFull()) {
+                errorsArr.push("weird thing happened dont know why its here")
+                rooms[roomIndex].startRoom(roomIndex)
             }
 
         } else {
-            console.log("requested room data for room: " + roomId + " :that doesnt exist")
+            errorsArr.push("requested room data for room: " + roomId + " :that doesnt exist")
         }
     })
 
@@ -161,10 +220,12 @@ io.on("connection", (socket) => {
     socket.on('move_played', (newGameData: Room) => {
         const indexRoom = rooms.findIndex(value => value.id == newGameData.id)
         if (indexRoom != -1) {
-            rooms[indexRoom].board = newGameData.board
-            rooms[indexRoom].turn = rooms[indexRoom].turn == 'x' ? 'o' : 'x'
-
-            checkWin(indexRoom)
+            rooms[indexRoom].playerMove(newGameData)
+            const winner = rooms[indexRoom].checkWin()
+            if (winner != ' ') {
+                writeData(players)
+                io.in(rooms[indexRoom].id).emit('player_won', winner)
+            }
 
             io.in(rooms[indexRoom].id).emit('player_moved', rooms[indexRoom])
         }
@@ -176,7 +237,8 @@ io.on("connection", (socket) => {
             const lostIndex = rooms[indexRoom].players.findIndex(value => value.name == lostPlayer.name)
             const wonSymbol = rooms[indexRoom].playerAssignments[lostIndex == 0 ? 1 : 0]
 
-            rooms[indexRoom].score[rooms[indexRoom].playerAssignments.findIndex(value => value == wonSymbol)] += 0.5
+
+            rooms[indexRoom].playerTimeOut(lostPlayer)
 
             io.in(rooms[indexRoom].id).emit('player_won', wonSymbol)
         } else {
@@ -187,17 +249,28 @@ io.on("connection", (socket) => {
 
     socket.on('leave_game', (leftPlayer: Player) => {
         const indexRoom = rooms.findIndex(value => value.id == leftPlayer.roomId)
-        const leaveIndex = rooms[indexRoom].players.findIndex(value => value.name == leftPlayer.name)
-        if (indexRoom != -1) {
 
+        if (indexRoom != -1) {
+            const leaveIndex = rooms[indexRoom].players.findIndex(value => value.name == leftPlayer.name)
             io.in(rooms[indexRoom].id).emit('opponent_left')
-            io.socketsLeave(rooms[indexRoom].id)
-            rooms[indexRoom].players = []
-            rooms[indexRoom].available = true
-            rooms[indexRoom].score = [0, 0]
-            resetRoom(indexRoom)
+
+            rooms = rooms.filter(value => value.id != rooms[indexRoom].id)
+
         } else {
-            console.log("unable to leave room, no room found")
+            errorsArr.push("unable to leave room, no room found")
+        }
+    })
+
+    socket.on("leave_queue_request", (player: Player) => {
+        const roomIndex = findRoomIndexFromPlayer(player)
+
+        if (roomIndex != -1) {
+            rooms[roomIndex].playerDisconnect(player)
+            players[findIfNameIsInDataBase(player.name)].resetRoomId()
+            io.to(socket.id).emit("leave_queue_response", "good")
+        } else {
+            io.to(socket.id).emit("leave_queue_response", "error")
+            errorsArr.push("Unable to leave queue becasue it cannont find the room")
         }
     })
 
@@ -205,25 +278,24 @@ io.on("connection", (socket) => {
         const indexRoom = rooms.findIndex(value => value.id == roomId)
 
         if (rooms[indexRoom].countDown < 2) {
-            resetRoom(indexRoom)
+            rooms[indexRoom].resetRoom()
         }
     })
 
     socket.on('disconnect', () => {
         if (findIfIDIsInDataBase(socket.id) != -1) {
             const index = findIfIDIsInDataBase(socket.id)
-            players[index].online = false
+            players[index].disconnect()
             const roomIndex = rooms.findIndex(value => value.id == players[index].roomId)
-            const playerIndex = rooms[roomIndex].players.findIndex(value => value.name == players[index].name)
+            if (roomIndex != -1) {
 
-            rooms[roomIndex].playerAssignments = rooms[roomIndex].playerAssignments.filter(value => value != rooms[roomIndex].playerAssignments[playerIndex])
-
-
-            rooms[roomIndex].players = rooms[roomIndex].players.filter(value => value.name != players[playerIndex].name)
-            socket.leave(rooms[roomIndex].id)
-
+                rooms[roomIndex].playerDisconnect(players[index])
+                io.to(rooms[roomIndex].id).emit("opponent_left")
+                socket.leave(rooms[roomIndex].id)
+            }
             playersOnline--
             io.emit("player_disconnected", playersOnline)
+            writeData(players)
 
         }
     })
@@ -231,61 +303,12 @@ io.on("connection", (socket) => {
 })
 
 
-server.listen(3000, () => {
-    console.log("This Server is Running on Port " + 3000)
+server.listen(PORT, () => {
+    console.log("This Server is Running on Port " + PORT)
+
 })
 
-const login = (index: number, socket: Socket) => {
-    players[index].online = true
-    players[index].id = socket.id
-    socket.join(players[index].roomId)
-    const roomIndex = rooms.findIndex(value => value.id == players[index].roomId)
-    if (roomIndex != -1) {
-        rooms[roomIndex].players.push(players[index])
-        if (rooms[roomIndex].playerAssignments[0] == 'x') {
-            rooms[roomIndex].playerAssignments.push('o')
-        } else {
-            rooms[roomIndex].playerAssignments.push('x')
-        }
-    }
-
-    playersOnline++
-}
-
-const findIfNameIsInDataBase = (data: string) => {
-    var temp = -1
-    players.forEach((value, index) => {
-        if (value.name == data) {
-            temp = index
-        }
-    })
-
-    return temp
-}
-const findIfIDIsInDataBase = (id: string) => {
-    var temp = -1
-    players.forEach((value, index) => {
-        if (value.id == id) {
-            temp = index
-        }
-    })
-
-    return temp
-}
-
-const registerPlayer = (user: string, socket: Socket) => {
-    var temp: Player = new Player(user, socket.id)
-    players.push(temp)
-}
-
-const startRoom = (roomId: string) => {
-    const roomIndex = rooms.findIndex(value => value.id == roomId)
-    rooms[roomIndex].gameStarted = true
-    countDownSetTimeOut(roomIndex)
-
-}
-
-const countDownSetTimeOut = (roomIndex: number) => {
+export const countDownSetTimeOut = (roomIndex: number) => {
 
     io.in(rooms[roomIndex].id).emit('count_down', rooms[roomIndex].countDown)
 
@@ -295,48 +318,11 @@ const countDownSetTimeOut = (roomIndex: number) => {
     }
 }
 
-const checkWin = (roomIndex: number) => {
-    const mappedArr = rooms[roomIndex].board.map(value => value == 'x' ? 1 : value == 'o' ? 5 : 0)
-    var flag = ' '
-
-    for (let i = 0; i < 3; i++) {
-        var tallyH = 0
-        var tallyV = 0
-        for (let j = 0; j < 3; j++) {
-            tallyH += mappedArr[i * 3 + j]
-            tallyV += mappedArr[j * 3 + i]
-        }
-        if (tallyH == 3 || tallyV == 3) {
-            flag = 'x'
-        }
-        if (tallyH == 15 || tallyV == 15) {
-            flag = 'o'
-        }
-
-    }
-    const dig1 = mappedArr[0] + mappedArr[4] + mappedArr[8]
-    const dig2 = mappedArr[2] + mappedArr[4] + mappedArr[6]
-    if (dig1 == 3 || dig2 == 3) {
-        flag = 'x'
-    }
-    if (dig1 == 15 || dig2 == 15) {
-        flag = 'o'
-    }
-
-
-    if (flag != ' ') {
-        rooms[roomIndex].score[rooms[roomIndex].playerAssignments.findIndex(value => value == flag)]++
-        io.in(rooms[roomIndex].id).emit('player_won', flag)
-
-    }
+//adds player to database
+function registerPlayer(user: string, socket: Socket) {
+    var temp: Player = new Player(user, socket.id)
+    players.push(temp)
+    writeData(players)
 }
 
-const resetRoom = (roomIndex: number) => {
-    rooms[roomIndex].gameStarted = false
-    rooms[roomIndex].playerAssignments = Math.random() > 0.5 ? ['x', 'o'].reverse() : ['x', 'o']
-    rooms[roomIndex].board = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
-    rooms[roomIndex].ready = [false, false]
-    rooms[roomIndex].turn = 'x'
-    rooms[roomIndex].countDown = 5
-    rooms[roomIndex].playerAssignments = [rooms[roomIndex].playerAssignments[1], rooms[roomIndex].playerAssignments[0]]
-}
+//logs the player in

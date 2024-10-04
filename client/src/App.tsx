@@ -17,7 +17,7 @@ export const socket = io('http://172.30.236.150:5005')
 function App() {
   return (
     <>
-      <div style={{ position: 'absolute' }}> v0.18</div>
+
 
       <Routes >
 

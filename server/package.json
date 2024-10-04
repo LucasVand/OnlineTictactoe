@@ -1,18 +1,28 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "dev": "tsx index.ts"
+    "start": "tsc && pm2 start dist/index.js --name OnlineTTT",
+    "dev": "tsx index.ts",
+    "stop": "pm2 delete OnlineTTT"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "cors": "^2.8.5",
     "express": "^4.21.0",
     "http": "^0.0.1-security",
-    "socket.io": "^4.7.5",
-    "tsx": "^4.19.1"
+    "socket.io": "^4.8.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.7.4",
+    "dotenv": "^16.4.5",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.2"
   }
 }
