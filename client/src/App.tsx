@@ -12,16 +12,22 @@ export const socket = io('http://172.30.236.150:5005')
 //http://3.145.104.154:3000
 //https://ec2-3-145-104-154.us-east-2.compute.amazonaws.com:3000
 //http://172.30.235.88:5005
+//https://19c9-129-100-205-229.ngrok-free.app
 
 function App() {
   return (
     <>
+      <div style={{ position: 'absolute' }}> v0.18</div>
+
       <Routes >
+
         <Route path='/OnlineTTT' element={<Login></Login>} />
+        <Route path='/queue' element={<Queue></Queue>} />
         <Route path='/menu' element={<Menu></Menu>} />
         <Route path='/game' element={<Game></Game>} />
-        <Route path='/queue' element={<Queue></Queue>} />
+
       </Routes>
+
     </>
   )
 

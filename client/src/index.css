@@ -24,11 +24,10 @@
   align-items: center;
   justify-content: center;
 
+  overflow: hidden;
+  user-select: none;
+
 
 }
 
-@media only screen and (max-width: 900px) {
-  :root {
-    font-size: 0.6em;
-  }
-}
+@media only screen and (max-width: 900px) {}

@@ -53,21 +53,24 @@ function Queue() {
 
         socket.on('opponent_left', () => {
             setQueueStat("leaving")
-            setTimeout(() => {
-                navigator('/menu', { replace: true, state: { user: playerData.name } })
-            }, 1000)
+            console.log("leaving room")
+            navigator('/menu', { replace: true, state: { user: playerData.name } })
+
         })
 
 
         socket.on('leave_queue_response', (res: string) => {
             if (res == 'good') {
                 socket.emit('leave_game', playerData)
-                navigator('/menu', { replace: true, state: { user: playerData.name } })
+                setTimeout(() => {
+                    navigator('/menu', { replace: true, state: { user: playerData.name } })
+                }, 1000)
             } else {
                 setQueueStat("failed")
             }
         })
 
+        return () => { socket.off() }
 
     }, [socket, playerData, dataGot, queueStat])
 

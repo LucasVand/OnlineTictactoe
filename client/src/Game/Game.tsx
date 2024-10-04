@@ -27,6 +27,8 @@ function Game() {
     const [opponentData, setOpponentData] = useState<Player>(new Player('', ''))
     const [roomData, setroomData] = useState<Room>(new Room(''))
 
+    const [timedOut, setTimedOut] = useState(false)
+
     var oldTime = Date.now()
 
     useEffect(() => {
@@ -34,9 +36,6 @@ function Game() {
         socket.emit("player_data_request", playerData.name)
         socket.emit('opponent_data_request', playerData.roomId)
         socket.emit('room_data_request', playerData.roomId)
-
-
-
     }, [])
 
     useEffect(() => {
@@ -44,7 +43,6 @@ function Game() {
             if (started && won == ' ') {
                 const timeBetween = Number(((Date.now() - oldTime) / 1000).toFixed(1))
                 oldTime = Date.now()
-                console.log(timeBetween)
 
                 if (myTurn) {
                     setMyTimeLeft(myTimeLeft - timeBetween)
@@ -52,14 +50,16 @@ function Game() {
                     setOppTimeLeft(oppTimeLeft - timeBetween)
                 }
 
-                if (myTimeLeft < 0) {
+                if (myTimeLeft < 0 && !timedOut) {
+                    console.log("timeout")
+                    setTimedOut(true)
                     socket.emit('time_out', playerData)
                 }
 
             }
         }, 100)
         return () => clearTimeout(timeoutId);
-    }, [myTimeLeft, oppTimeLeft, started, myTurn]);
+    }, [myTimeLeft, oppTimeLeft, started, myTurn, timedOut]);
 
     useEffect(() => {
         socket.on('player_data', (data) => {
@@ -105,9 +105,13 @@ function Game() {
 
         socket.on('opponent_left', () => {
             setOpponentLeft(true)
+            if (won == ' ') {
+                setWon(mySymbol)
+            }
         })
 
 
+        return () => { socket.off() }
 
     }, [socket, playerData, opponentData, countDown, roomData, mySymbol, myTurn, myIndex, won, oppTimeLeft, myTimeLeft])
 

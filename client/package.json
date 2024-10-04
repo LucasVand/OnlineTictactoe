@@ -11,8 +11,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "transpile": "npm run build && rm -rf ./OnlineTTT && mv ./dist/ ./OnlineTTT/ ",
-    "upload": "scp -r ./OnlineTTT admin@172.30.236.150:C:/Users/vande/Frontends/",
+    "transpile": "rm -rf ./OnlineTTT && npm run build && mv ./dist/ ./OnlineTTT/ ",
+    "upload": "scp -rp ./OnlineTTT admin@172.30.236.150:C:/Users/vande/Frontends/",
     "post": "npm run transpile && npm run upload"
   },
   "dependencies": {

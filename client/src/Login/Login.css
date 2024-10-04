@@ -12,6 +12,7 @@
 
 .nameInput {
     width: 50vw;
+    height: 1.2em;
 
     background-color: rgb(194, 184, 184);
     border-radius: 0.5em;
@@ -64,16 +65,4 @@
 
 .submitNameButton:active {
     scale: 0.95;
-}
-
-
-@media only screen and (max-width: 900px) {
-    .nameInput {
-        width: 70vw;
-    }
-
-    .loginCont {
-        font-size: 1em;
-    }
-
 }

@@ -5,6 +5,14 @@
     justify-content: center;
     flex-direction: column;
 
+    height: 30.2em;
+}
+
+@media only screen and (max-width: 900px) {
+    .wholeScreenQueue {
+        font-size: 0.7em;
+
+    }
 }
 
 .queueTitle {
@@ -33,6 +41,10 @@
 .wholeScreenQueue {
     width: 100vw;
     height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
 }
 
 

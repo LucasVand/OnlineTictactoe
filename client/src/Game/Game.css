@@ -177,8 +177,6 @@
 
 .gameWonCont {
     position: absolute;
-
-
     width: 30em;
     height: 10em;
     background-color: rgba(65, 65, 65, 0.333);
@@ -191,7 +189,19 @@
 
     border-radius: 1em;
 
+    animation: gameWonContAni 0.4s both;
 }
+
+@keyframes gameWonContAni {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
 
 .playAgainButton {
     border-radius: 0.3em;
@@ -290,5 +300,10 @@
 @media only screen and (max-width: 900px) {
     .gameCont {
         font-size: 0.7em;
+
+    }
+
+    .gameWonCont {
+        font-size: 0.8em;
     }
 }

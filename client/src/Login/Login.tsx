@@ -29,11 +29,14 @@ function Login() {
                 setErrorMessage("This user is already logged in")
             }
         })
+
+        return () => { socket.off() }
     }, [socket, success, name])
 
     return (
         <>
             <div className='loginCont'>
+
                 <div className='namePrompt'>Enter Your Name</div>
                 <input className='nameInput' placeholder='Name' onChange={(e) => {
                     setName(e.target.value)
@@ -45,6 +48,7 @@ function Login() {
                 <div>
                     <button className='submitNameButton' onClick={login}>Submit</button>
                 </div>
+
 
             </div>
         </>
