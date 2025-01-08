@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "dist/index.js",
   "scripts": {
+    "build": "",
     "start": "tsc && pm2 start dist/index.js --name OnlineTTT",
     "dev": "tsx index.ts",
     "stop": "pm2 delete OnlineTTT"
